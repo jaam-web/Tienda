@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tienda</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .dolar-price {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2ecc71;
+            margin: 15px 0;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            min-width: 600px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .currency-rate {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .currency-rate input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .hidden {
+            display: none;
+        }
+        td img {
+            max-width: 50px;
+            height: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .currency-rate {
+                flex-direction: column;
+            }
+            .currency-rate input,
+            .currency-rate button {
+                width: 100%;
+            }
+            .actions button {
+                flex: 1 1 100%;
+                margin-bottom: 10px;
+            }
+            td img {
+                max-width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Gestor de Tienda</h1>
+        <div class="dolar-price" id="dolarPriceDisplay">Bs 0.00</div>
+
+        <!-- Sección de Tasa del Dólar -->
+        <div class="currency-rate">
+            <input type="number" id="dolarRate" step="0.0001" min="0" placeholder="Tasa del Dólar">
+            <button class="btn-primary" onclick="guardarTasaDolar()">💵 Guardar Tasa</button>
+            <button class="btn-primary" onclick="mostrarFormulario()">➕ Agregar Producto</button>
+        </div>
+
+        <!-- Inventario de Productos -->
+        <div class="section" id="inventorySection">
+            <h2>📦 Inventario de Productos</h2>
+            <div class="table-wrapper">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio (USD)</th>
+                            <th>Precio (Bs)</th>
+                            <th>Stock</th>
+                            <th>Foto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los productos se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Formulario de Productos -->
+        <div class="section hidden" id="productManagementSection">
+            <h2>🛒 Gestión de Productos</h2>
+            <div class="form-group">
+                <label for="productId">Código del Producto:</label>
+                <input type="text" id="productId" placeholder="Ej: PROD-001">
+            </div>
+            <div class="form-group">
+                <label for="productName">Nombre del Producto:</label>
+                <input type="text" id="productName" placeholder="Ej: Café ">
+            </div>
+            <div class="form-group">
+                <label for="productCategory">Categoría:</label>
+                <select id="productCategory">
+                    <option value="electronica">Electrónica</option>
+                    <option value="ropa">Ropa</option>
+                    <option value="alimentos">Alimentos</option>
+                    <option value="hogar">Hogar</option>
+                    <option value="otros">Otros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="productPriceUSD">Precio en USD:</label>
+                <input type="number" id="productPriceUSD" step="0.01" min="0" placeholder="Ej: 34.55">
+            </div>
+            <div class="form-group">
+                <label for="productStock">Cantidad en Stock:</label>
+                <input type="number" id="productStock" min="0" placeholder="Ej: 50">
+            </div>
+            <div class="form-group">
+                <label for="productImage">Subir Imagen del Producto:</label>
+                <input type="file" id="productImage" accept="image/*">
+            </div>
+            
+            <div class="actions">
+                <button class="btn-primary" id="btnAdd" onclick="agregarProducto()">➕ Agregar Producto</button>
+                <button class="btn-success hidden" id="btnUpdate" onclick="actualizarProducto()">🔄 Actualizar</button>
+                <button class="btn-danger" id="btnCancel" onclick="cancelarEdicion()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let tasaDolar = 0;
+        let productos = [];
+        let productoEditando = null;
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+            actualizarTabla();
+            actualizarTasaDisplay();
+        });
+
+        // Guardar tasa del dólar
+        function guardarTasaDolar() {
+            const input = document.getElementById('dolarRate');
+            tasaDolar = parseFloat(input.value);
+            
+            if (isNaN(tasaDolar) || tasaDolar <= 0) {
+                alert('⚠️ Por favor ingrese una tasa válida mayor a cero');
+                return;
+            }
+            
+            localStorage.setItem('tasa_dolar', JSON.stringify({ tasa: tasaDolar }));
+            
+            actualizarTasaDisplay();
+            actualizarTabla();
+            
+            input.value = '';
+            alert('✅ Tasa del dólar guardada correctamente');
+        }
+
+        // Mostrar formulario de gestión de productos
+        function mostrarFormulario() {
+            document.getElementById('inventorySection').classList.add('hidden');
+            document.getElementById('productManagementSection').classList.remove('hidden');
+        }
+
+        // Agregar nuevo producto
+        function agregarProducto() {
+            const id = document.getElementById('productId').value.trim();
+            const nombre = document.getElementById('productName').value.trim();
+            const categoria = document.getElementById('productCategory').value;
+            const precioUSD = parseFloat(document.getElementById('productPriceUSD').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            const imagen = document.getElementById('productImage').files[0];
+
+            if (!id || !nombre || isNaN(precioUSD) || precioUSD <= 0 || isNaN(stock) || stock < 0 || !imagen) {
+                alert('⚠️ Complete todos los campos válidos y suba una imagen');
+                return;
+            }
+            
+            if (productos.some(p => p.id === id)) {
+                alert('⚠️ Ya existe un producto con este código');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const nuevoProducto = {
+                    id,
+                    nombre,
+                    categoria,
+                    precioUSD,
+                    stock,
+                    imagen: e.target.result
+                };
+                
+                productos.push(nuevoProducto);
+                guardarProductos();
+                actualizarTabla();
+                limpiarFormulario();
+                document.getElementById('productManagementSection').classList.add('hidden');
+                document.getElementById('inventorySection').classList.remove('hidden');
+                alert('✅ Producto agregado correctamente');
+            };
+            reader.readAsDataURL(imagen);
+        }
+
+        // Editar producto
+        function editarProducto(id) {
+            productoEditando = productos.find(p => p.id === id);
+            
+            if (!productoEditando) return;
+            
+            document.getElementById('productId').value = productoEditando.id;
+            document.getElementById('productName').value = productoEditando.nombre;
+            document.getElementById('productCategory').value = productoEditando.categoria;
+            document.getElementById('productPriceUSD').value = productoEditando.precioUSD;
+            document.getElementById('productStock').value = productoEditando.stock;
+            document.getElementById('productImage').value = '';
+            
+            document.getElementById('productId').readOnly = true;
+            document.getElementById('btnAdd').classList.add('hidden');
+            document.getElementById('btnUpdate').classList.remove('hidden');
+            document.getElementById('btnCancel').classList.remove('hidden');
+
+            mostrarFormulario();
+        }
+
+        // Actualizar producto
+        function actualizarProducto() {
+            if (!productoEditando) return;
+            
+            const nombre = document.getElementById('productName').value.trim();
+            const categoria = document.getElementById('productCategory').value;
+            const precioUSD = parseFloat(document.getElementById('productPriceUSD').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            const imagen = document.getElementById('productImage').files[0];
+
+            if (!nombre || isNaN(precioUSD) || precioUSD <= 0 || isNaN(stock) || stock < 0) {
+                alert('⚠️ Complete todos los campos válidos');
+                return;
+            }
+            
+            productoEditando.nombre = nombre;
+            productoEditando.categoria = categoria;
+            productoEditando.precioUSD = precioUSD;
+            productoEditando.stock = stock;
+
+            if (imagen) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    productoEditando.imagen = e.target.result;
+                    guardarProductos();
+                    actualizarTabla();
+                    cancelarEdicion();
+                    alert('✅ Producto actualizado correctamente');
+                };
+                reader.readAsDataURL(imagen);
+            } else {
+                guardarProductos();
+                actualizarTabla();
+                cancelarEdicion();
+                alert('✅ Producto actualizado correctamente');
+            }
+        }
+
+        // Eliminar producto
+        function eliminarProducto(id) {
+            if (confirm('¿Está seguro de eliminar este producto?')) {
+                productos = productos.filter(p => p.id !== id);
+                guardarProductos();
+                actualizarTabla();
+                alert('✅ Producto eliminado correctamente');
+            }
+        }
+
+        // Cancelar edición
+        function cancelarEdicion() {
+            productoEditando = null;
+            limpiarFormulario();
+            document.getElementById('productId').readOnly = false;
+            document.getElementById('btnAdd').classList.remove('hidden');
+            document.getElementById('btnUpdate').classList.add('hidden');
+            document.getElementById('btnCancel').classList.add('hidden');
+            document.getElementById('productManagementSection').classList.add('hidden');
+            document.getElementById('inventorySection').classList.remove('hidden');
+        }
+
+        // Limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productPriceUSD').value = '';
+            document.getElementById('productStock').value = '';
+            document.getElementById('productImage').value = '';
+        }
+
+        // Actualizar tabla de productos
+        function actualizarTabla() {
+            const tbody = document.querySelector('#productsTable tbody');
+            tbody.innerHTML = '';
+            
+            if (productos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay productos registrados</td></tr>';
+                return;
+            }
+            
+            productos.forEach(producto => {
+                const precioBS = tasaDolar > 0 ? (producto.precioUSD * tasaDolar).toFixed(2) : 'N/A';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${producto.id}</td>
+                    <td>${producto.nombre}</td>
+                    <td>${producto.categoria}</td>
+                    <td>$${producto.precioUSD.toFixed(2)}</td>
+                    <td>${precioBS !== 'N/A' ? 'Bs ' + precioBS : precioBS}</td>
+                    <td>${producto.stock}</td>
+                    <td><img src="${producto.imagen}" alt="${producto.nombre}"></td>
+                    <td class="actions">
+                        <button class="btn-primary" onclick="editarProducto('${producto.id}')">✏️ Editar</button>
+                        <button class="btn-danger" onclick="eliminarProducto('${producto.id}')">🗑️ Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Mostrar tasa actual
+        function actualizarTasaDisplay() {
+            const precioBs = tasaDolar > 0 ? `Bs ${tasaDolar.toFixed(2)}` : 'Bs 0.00';
+            document.getElementById('dolarPriceDisplay').textContent = precioBs;
+        }
+
+        // Guardar productos en localStorage
+        function guardarProductos() {
+            localStorage.setItem('productos', JSON.stringify(productos));
+        }
+
+        // Cargar datos desde localStorage
+        function cargarDatos() {
+            try {
+                const tasaData = JSON.parse(localStorage.getItem('tasa_dolar'));
+                tasaDolar = tasaData ? tasaData.tasa : 0;
+                
+                const productosData = JSON.parse(localStorage.getItem('productos'));
+                productos = productosData ? productosData : [];
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+            }
+        }
+    </script>
+</body>
+</html>
